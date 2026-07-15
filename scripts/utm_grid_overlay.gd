@@ -52,9 +52,9 @@ func _draw() -> void:
         var step := int(contour_step_meters / meters_per_pixel)
         for x in range(0, map_size.x, step):
             for y in range(0, map_size.y, step):
-                var h := terrain_generator.get_height_meters(Vector2(x, y))
+                var h: float = terrain_generator.get_height_meters(Vector2(x, y))
                 if int(h) % 50 == 0 and int(h) > 100:
-                    draw_circle(Vector2(x, y), 2.2, Color(1.0, 0.85, 0.2, 0.85))  # brighter golden dots
+                    draw_circle(Vector2(x, y), 2.2, Color(1.0, 0.85, 0.2, 0.85))
 
 func world_to_utm_string(world_pos: Vector2) -> String:
     var east := int(utm_easting_base + world_pos.x * meters_per_pixel)
