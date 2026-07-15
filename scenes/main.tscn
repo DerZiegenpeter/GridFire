@@ -1,13 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://b2v8k3p9m4x7q2r5"]
+[gd_scene format=3 uid="uid://btcbrvfcydlqi"]
 
-[ext_resource type="Script" path="res://scripts/terrain_generator.gd" id="1_terrain"]
-[ext_resource type="Script" path="res://scripts/utm_grid_overlay.gd" id="2_grid"]
-[ext_resource type="Script" path="res://scripts/camera_controller.gd" id="3_cam"]
-[ext_resource type="Script" path="res://scripts/mouse_coord_display.gd" id="4_coord"]
+[ext_resource type="Script" uid="uid://cvpik02kc2t0l" path="res://scripts/terrain_generator.gd" id="1_terrain"]
+[ext_resource type="Script" uid="uid://bskg7bclr3ioj" path="res://scripts/utm_grid_overlay.gd" id="2_grid"]
+[ext_resource type="Script" uid="uid://cad1x4k7bhnpu" path="res://scripts/camera_controller.gd" id="3_cam"]
+[ext_resource type="Script" uid="uid://dd5ux8iip62yq" path="res://scripts/mouse_coord_display.gd" id="4_coord"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=439703332]
 
-[node name="BlackBackground" type="ColorRect" parent="."]
+[node name="BlackBackground" type="ColorRect" parent="." unique_id=978563982]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -15,21 +15,21 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
 
-[node name="World" type="Node2D" parent="."]
+[node name="World" type="Node2D" parent="." unique_id=1013247526]
 
-[node name="TerrainSprite" type="Sprite2D" parent="World"]
+[node name="TerrainSprite" type="Sprite2D" parent="World" unique_id=2094388921]
 script = ExtResource("1_terrain")
 
-[node name="GridOverlay" type="Node2D" parent="World"]
+[node name="GridOverlay" type="Node2D" parent="World" unique_id=1089694750]
 script = ExtResource("2_grid")
 terrain_generator_path = NodePath("../TerrainSprite")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=215208369]
 script = ExtResource("3_cam")
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1441632435]
 
-[node name="CoordLabel" type="Label" parent="HUD"]
+[node name="CoordLabel" type="Label" parent="HUD" unique_id=1244563599]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
