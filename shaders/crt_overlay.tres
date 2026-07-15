@@ -1,4 +1,4 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://crt001"]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://crt001"]
 
 [ext_resource type="Shader" path="res://shaders/crt_overlay.gdshader" id="1"]
 
