@@ -1,5 +1,5 @@
 @tool
-extends Node2D
+extends Sprite2D
 class_name TerrainGenerator
 
 @export var map_size: Vector2i = Vector2i(2048, 2048)
@@ -17,8 +17,7 @@ var noise: FastNoiseLite
 var terrain_texture: ImageTexture
 
 func _ready() -> void:
-    if not Engine.is_editor_hint():
-        generate_terrain()
+    generate_terrain()  # jetzt auch im Editor (@tool) sichtbar
 
 func generate_terrain() -> void:
     noise = FastNoiseLite.new()
@@ -38,22 +37,22 @@ func generate_terrain() -> void:
 
             var color: Color
             if h < 0.22:
-                color = Color(0.01, 0.12, 0.01)      # very dark green
+                color = Color(0.02, 0.15, 0.02)
             elif h < 0.40:
-                color = Color(0.05, 0.25, 0.04)
+                color = Color(0.08, 0.28, 0.06)
             elif h < 0.60:
-                color = Color(0.12, 0.35, 0.08)
+                color = Color(0.18, 0.38, 0.10)
             else:
-                color = Color(0.25, 0.42, 0.12)      # clearly visible hills
+                color = Color(0.32, 0.48, 0.15)
 
             img.set_pixel(x, y, color)
 
     terrain_texture = ImageTexture.create_from_image(img)
-    var sprite := get_node_or_null("TerrainSprite") as Sprite2D
-    if sprite:
-        sprite.texture = terrain_texture
-        sprite.position = map_size / 2.0
-        sprite.centered = false
+    
+    # FIX: Da das Script jetzt am TerrainSprite (Sprite2D) hängt, wenden wir die Textur direkt auf uns selbst an
+    self.texture = terrain_texture
+    self.position = Vector2.ZERO
+    self.centered = true
 
 func get_height_meters(world_pos: Vector2) -> float:
     if not noise:
