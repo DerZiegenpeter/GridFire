@@ -6,7 +6,7 @@ class_name ContourOverlay
 
 @export var contour_interval: float = 20.0
 @export var index_interval: float = 100.0
-@export var sample_step: int = 5
+@export var sample_step: int = 8
 
 @export var normal_color: Color = Color(0.12, 0.22, 0.10, 0.70)
 @export var index_color: Color = Color(0.08, 0.15, 0.06, 0.92)
@@ -20,7 +20,6 @@ var is_index: Array[bool] = []
 func _ready() -> void:
 	if terrain_path:
 		terrain = get_node_or_null(terrain_path) as TerrainGenerator
-	# Warten bis Terrain (inkl. Erosion) fertig ist
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_generate_contours()
