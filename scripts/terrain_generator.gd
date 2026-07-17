@@ -18,11 +18,11 @@ class_name TerrainGenerator
 
 # Erosion
 @export var erosion_iterations: int = 28
-@export var talus_angle: float = 0.028          # ~ steeper slopes get eroded
+@export var talus_angle: float = 0.028
 @export var erosion_strength: float = 0.28
 
 # Hillshade
-@export var light_direction: Vector3 = Vector3(-0.6, -0.45, 0.65)  # NW light
+@export var light_direction: Vector3 = Vector3(-0.6, -0.45, 0.65)
 @export var ambient: float = 0.38
 @export var diffuse_strength: float = 0.72
 
@@ -72,35 +72,32 @@ func _init_noises() -> void:
 	ridge_noise.fractal_type = FastNoiseLite.FRACTAL_RIDGED
 
 func _generate_base_heights() -> void:
-	var w := map_size.x
-	var h := map_size.y
+	var w: int = map_size.x
+	var h: int = map_size.y
 	heights.resize(w * h)
 
 	for y in h:
 		for x in w:
-			# Domain warping for more organic shapes
-			var wx := warp_noise.get_noise_2d(x, y) * warp_strength
-			var wy := warp_noise.get_noise_2d(x + 500, y + 300) * warp_strength
+			var wx: float = warp_noise.get_noise_2d(x, y) * warp_strength
+			var wy: float = warp_noise.get_noise_2d(x + 500, y + 300) * warp_strength
 
-			var n1 := noise.get_noise_2d(x + wx, y + wy)
-			var n2 := ridge_noise.get_noise_2d(x * 0.85 + wx * 0.4, y * 0.85 + wy * 0.4)
+			var n1: float = noise.get_noise_2d(x + wx, y + wy)
+			var n2: float = ridge_noise.get_noise_2d(x * 0.85 + wx * 0.4, y * 0.85 + wy * 0.4)
 
-			# Combine: base FBM + ridged mountains
-			var val := n1 * 0.65 + n2 * ridge_strength
+			var val: float = n1 * 0.65 + n2 * ridge_strength
 			val = clamp(val * 0.5 + 0.5, 0.0, 1.0)
 
-			# Slight continental bias (higher in center-ish, but still natural)
-			var dx := (x / float(w) - 0.5) * 2.0
-			var dy := (y / float(h) - 0.5) * 2.0
-			var dist := sqrt(dx * dx + dy * dy)
+			var dx: float = (x / float(w) - 0.5) * 2.0
+			var dy: float = (y / float(h) - 0.5) * 2.0
+			var dist: float = sqrt(dx * dx + dy * dy)
 			val = lerp(val, val * 0.75 + 0.15, clamp(dist * 0.6, 0.0, 1.0))
 
 			heights[y * w + x] = lerp(min_height_m, max_height_m, val)
 
 func _apply_thermal_erosion() -> void:
-	var w := map_size.x
-	var h := map_size.y
-	var dirs := [
+	var w: int = map_size.x
+	var h: int = map_size.y
+	var dirs: Array[Vector2i] = [
 		Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
 		Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)
 	]
@@ -112,50 +109,48 @@ func _apply_thermal_erosion() -> void:
 
 		for y in range(1, h - 1):
 			for x in range(1, w - 1):
-				var idx := y * w + x
-				var h0 := heights[idx]
+				var idx: int = y * w + x
+				var h0: float = heights[idx]
 
-				var max_diff := 0.0
-				var best_dir := Vector2i.ZERO
+				var max_diff: float = 0.0
+				var best_dir: Vector2i = Vector2i.ZERO
 
 				for d in dirs:
-					var nx := x + d.x
-					var ny := y + d.y
-					var h1 := heights[ny * w + nx]
-					var diff := h0 - h1
+					var nx: int = x + d.x
+					var ny: int = y + d.y
+					var h1: float = heights[ny * w + nx]
+					var diff: float = h0 - h1
 					if diff > max_diff:
 						max_diff = diff
 						best_dir = d
 
 				if max_diff > talus_angle * (1.0 if best_dir.x == 0 or best_dir.y == 0 else 1.414):
-					var amount := (max_diff - talus_angle) * erosion_strength
+					var amount: float = (max_diff - talus_angle) * erosion_strength
 					delta[idx] -= amount
-					var nidx := (y + best_dir.y) * w + (x + best_dir.x)
+					var nidx: int = (y + best_dir.y) * w + (x + best_dir.x)
 					delta[nidx] += amount
 
 		for i in heights.size():
 			heights[i] += delta[i]
 
 func _build_shaded_texture() -> void:
-	var w := map_size.x
-	var h := map_size.y
+	var w: int = map_size.x
+	var h: int = map_size.y
 	var img := Image.create(w, h, false, Image.FORMAT_RGB8)
 
-	var light := light_direction.normalized()
+	var light: Vector3 = light_direction.normalized()
 
-	# Soft hypsometric colors (light so hillshade has room)
-	var col_low  := Color(0.82, 0.88, 0.76)
-	var col_mid  := Color(0.74, 0.82, 0.66)
-	var col_high := Color(0.68, 0.76, 0.58)
-	var col_peak := Color(0.78, 0.80, 0.72)
+	var col_low: Color = Color(0.82, 0.88, 0.76)
+	var col_mid: Color = Color(0.74, 0.82, 0.66)
+	var col_high: Color = Color(0.68, 0.76, 0.58)
+	var col_peak: Color = Color(0.78, 0.80, 0.72)
 
 	for y in h:
 		for x in w:
-			var height := _get_height_raw(x, y)
-			var t := inverse_lerp(min_height_m, max_height_m, height)
+			var height: float = _get_height_raw(x, y)
+			var t: float = inverse_lerp(min_height_m, max_height_m, height)
 			t = clamp(t, 0.0, 1.0)
 
-			# Base color by height
 			var base: Color
 			if t < 0.45:
 				base = col_low.lerp(col_mid, t / 0.45)
@@ -164,21 +159,20 @@ func _build_shaded_texture() -> void:
 			else:
 				base = col_high.lerp(col_peak, (t - 0.75) / 0.25)
 
-			# Hillshade (finite differences)
-			var hl := _get_height_raw(maxi(x - 1, 0), y)
-			var hr := _get_height_raw(mini(x + 1, w - 1), y)
-			var hu := _get_height_raw(x, maxi(y - 1, 0))
-			var hd := _get_height_raw(x, mini(y + 1, h - 1))
+			var hl: float = _get_height_raw(maxi(x - 1, 0), y)
+			var hr: float = _get_height_raw(mini(x + 1, w - 1), y)
+			var hu: float = _get_height_raw(x, maxi(y - 1, 0))
+			var hd: float = _get_height_raw(x, mini(y + 1, h - 1))
 
-			var dzx := (hr - hl) / 2.0
-			var dzy := (hd - hu) / 2.0
-			var normal := Vector3(-dzx, -dzy, 8.0).normalized()  # z exaggerated a bit for stronger relief
+			var dzx: float = (hr - hl) / 2.0
+			var dzy: float = (hd - hu) / 2.0
+			var normal: Vector3 = Vector3(-dzx, -dzy, 8.0).normalized()
 
-			var ndotl := clamp(normal.dot(light), 0.0, 1.0)
-			var shade := ambient + diffuse_strength * ndotl
-			shade = pow(shade, 0.92)  # slight contrast curve
+			var ndotl: float = clamp(normal.dot(light), 0.0, 1.0)
+			var shade: float = ambient + diffuse_strength * ndotl
+			shade = pow(shade, 0.92)
 
-			var final_col := base * shade
+			var final_col: Color = base * shade
 			img.set_pixel(x, y, final_col)
 
 	terrain_texture = ImageTexture.create_from_image(img)
@@ -194,23 +188,22 @@ func get_height_meters(world_pos: Vector2) -> float:
 	if heights.is_empty():
 		return 0.0
 
-	var x := world_pos.x
-	var y := world_pos.y
+	var x: float = world_pos.x
+	var y: float = world_pos.y
 
-	# Bilinear sampling
-	var x0 := int(floor(x))
-	var y0 := int(floor(y))
-	var x1 := x0 + 1
-	var y1 := y0 + 1
+	var x0: int = int(floor(x))
+	var y0: int = int(floor(y))
+	var x1: int = x0 + 1
+	var y1: int = y0 + 1
 
-	var sx := x - x0
-	var sy := y - y0
+	var sx: float = x - x0
+	var sy: float = y - y0
 
-	var h00 := _get_height_raw(x0, y0)
-	var h10 := _get_height_raw(x1, y0)
-	var h01 := _get_height_raw(x0, y1)
-	var h11 := _get_height_raw(x1, y1)
+	var h00: float = _get_height_raw(x0, y0)
+	var h10: float = _get_height_raw(x1, y0)
+	var h01: float = _get_height_raw(x0, y1)
+	var h11: float = _get_height_raw(x1, y1)
 
-	var h0 := lerp(h00, h10, sx)
-	var h1 := lerp(h01, h11, sx)
+	var h0: float = lerp(h00, h10, sx)
+	var h1: float = lerp(h01, h11, sx)
 	return lerp(h0, h1, sy)
