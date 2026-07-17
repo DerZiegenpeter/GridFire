@@ -16,7 +16,7 @@ color = Color(0.78, 0.84, 0.72, 1)
 [node name="TerrainSprite" type="Sprite2D" parent="World"]
 script = ExtResource("1_terrain")
 
-[node name="ContourOverlay" type="Sprite2D" parent="World"]
+[node name="ContourOverlay" type="Node2D" parent="World"]
 z_index = 1
 script = ExtResource("5_contour")
 terrain_path = NodePath("../TerrainSprite")
