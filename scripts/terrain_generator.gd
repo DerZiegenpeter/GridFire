@@ -16,7 +16,7 @@ class_name TerrainGenerator
 @export var min_height_m: float = 90.0
 @export var max_height_m: float = 420.0
 
-# Erosion (kept light for performance)
+# Erosion
 @export var erosion_iterations: int = 6
 @export var talus_angle: float = 0.035
 @export var erosion_strength: float = 0.35
@@ -25,6 +25,14 @@ class_name TerrainGenerator
 @export var light_direction: Vector3 = Vector3(-0.6, -0.45, 0.65)
 @export var ambient: float = 0.38
 @export var diffuse_strength: float = 0.72
+
+# Cache
+@export var force_regenerate: bool = false   # auf true setzen um Cache zu ignorieren
+
+const CACHE_DIR := "user://terrain_cache/"
+const TEX_FILE := "terrain.png"
+const HEIGHTS_FILE := "heights.bin"
+const META_FILE := "meta.txt"
 
 var noise: FastNoiseLite
 var warp_noise: FastNoiseLite
@@ -37,14 +45,85 @@ func _ready() -> void:
 	generate_terrain()
 
 func generate_terrain() -> void:
+	if not force_regenerate and _try_load_cache():
+		print("[Terrain] Cache geladen → sofort fertig")
+		self.texture = terrain_texture
+		self.position = Vector2.ZERO
+		self.centered = false
+		return
+
+	print("[Terrain] Generiere neues Terrain (das dauert ein paar Sekunden)...")
 	_init_noises()
 	_generate_base_heights()
 	_apply_thermal_erosion()
 	_build_shaded_texture()
+	_save_cache()
 
 	self.texture = terrain_texture
 	self.position = Vector2.ZERO
 	self.centered = false
+	print("[Terrain] Fertig und im Cache gespeichert")
+
+func _try_load_cache() -> bool:
+	var tex_path := CACHE_DIR + TEX_FILE
+	var heights_path := CACHE_DIR + HEIGHTS_FILE
+	var meta_path := CACHE_DIR + META_FILE
+
+	if not FileAccess.file_exists(tex_path) or not FileAccess.file_exists(heights_path):
+		return false
+
+	# Meta prüfen (Seed + Größe)
+	if FileAccess.file_exists(meta_path):
+		var meta := FileAccess.open(meta_path, FileAccess.READ)
+		if meta:
+			var saved_seed := meta.get_32()
+			var saved_w := meta.get_32()
+			var saved_h := meta.get_32()
+			meta.close()
+			if saved_seed != noise_seed or saved_w != map_size.x or saved_h != map_size.y:
+				print("[Terrain] Cache ungültig (andere Parameter) → neu generieren")
+				return false
+
+	# Texture laden
+	var img := Image.load_from_file(tex_path)
+	if img == null:
+		return false
+	terrain_texture = ImageTexture.create_from_image(img)
+
+	# Heights laden
+	var file := FileAccess.open(heights_path, FileAccess.READ)
+	if file == null:
+		return false
+	var expected_size: int = map_size.x * map_size.y
+	heights.resize(expected_size)
+	for i in expected_size:
+		heights[i] = file.get_float()
+	file.close()
+
+	return true
+
+func _save_cache() -> void:
+	DirAccess.make_dir_recursive_absolute(CACHE_DIR)
+
+	# Texture speichern
+	var img := terrain_texture.get_image()
+	if img:
+		img.save_png(CACHE_DIR + TEX_FILE)
+
+	# Heights speichern
+	var file := FileAccess.open(CACHE_DIR + HEIGHTS_FILE, FileAccess.WRITE)
+	if file:
+		for h in heights:
+			file.store_float(h)
+		file.close()
+
+	# Meta speichern
+	var meta := FileAccess.open(CACHE_DIR + META_FILE, FileAccess.WRITE)
+	if meta:
+		meta.store_32(noise_seed)
+		meta.store_32(map_size.x)
+		meta.store_32(map_size.y)
+		meta.close()
 
 func _init_noises() -> void:
 	noise = FastNoiseLite.new()
@@ -97,7 +176,6 @@ func _generate_base_heights() -> void:
 func _apply_thermal_erosion() -> void:
 	var w: int = map_size.x
 	var h: int = map_size.y
-	# Only 4 directions = much faster
 	var dirs: Array[Vector2i] = [
 		Vector2i(1, 0), Vector2i(-1, 0),
 		Vector2i(0, 1), Vector2i(0, -1)
