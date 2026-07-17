@@ -5,7 +5,7 @@ class_name TerrainGenerator
 @export var map_size: Vector2i = Vector2i(2000, 2000)
 @export var noise_seed: int = 1337
 
-# Noise settings (realistic mountains / hills)
+# Noise settings
 @export var frequency: float = 0.0016
 @export var octaves: int = 5
 @export var lacunarity: float = 2.2
@@ -16,10 +16,10 @@ class_name TerrainGenerator
 @export var min_height_m: float = 90.0
 @export var max_height_m: float = 420.0
 
-# Erosion
-@export var erosion_iterations: int = 28
-@export var talus_angle: float = 0.028
-@export var erosion_strength: float = 0.28
+# Erosion (kept light for performance)
+@export var erosion_iterations: int = 6
+@export var talus_angle: float = 0.035
+@export var erosion_strength: float = 0.35
 
 # Hillshade
 @export var light_direction: Vector3 = Vector3(-0.6, -0.45, 0.65)
@@ -97,9 +97,10 @@ func _generate_base_heights() -> void:
 func _apply_thermal_erosion() -> void:
 	var w: int = map_size.x
 	var h: int = map_size.y
+	# Only 4 directions = much faster
 	var dirs: Array[Vector2i] = [
-		Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
-		Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)
+		Vector2i(1, 0), Vector2i(-1, 0),
+		Vector2i(0, 1), Vector2i(0, -1)
 	]
 
 	for iter in erosion_iterations:
@@ -124,7 +125,7 @@ func _apply_thermal_erosion() -> void:
 						max_diff = diff
 						best_dir = d
 
-				if max_diff > talus_angle * (1.0 if best_dir.x == 0 or best_dir.y == 0 else 1.414):
+				if max_diff > talus_angle:
 					var amount: float = (max_diff - talus_angle) * erosion_strength
 					delta[idx] -= amount
 					var nidx: int = (y + best_dir.y) * w + (x + best_dir.x)
