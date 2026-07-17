@@ -4,18 +4,19 @@ class_name ContourOverlay
 @export var map_size: Vector2i = Vector2i(2000, 2000)
 @export var terrain_path: NodePath = NodePath("../TerrainSprite")
 
-@export var contour_interval: float = 20.0
+@export var contour_interval: float = 25.0
 @export var index_interval: float = 100.0
-@export var sample_step: int = 8
+@export var sample_step: int = 14          # höher = deutlich schneller + weniger Lag
 
-@export var normal_color: Color = Color(0.12, 0.22, 0.10, 0.70)
-@export var index_color: Color = Color(0.08, 0.15, 0.06, 0.92)
-@export var normal_width: float = 1.15
-@export var index_width: float = 2.35
+@export var normal_color: Color = Color(0.12, 0.22, 0.10, 0.65)
+@export var index_color: Color = Color(0.08, 0.15, 0.06, 0.90)
+@export var normal_width: float = 1.1
+@export var index_width: float = 2.2
 
 var terrain: TerrainGenerator
 var contour_lines: Array[PackedVector2Array] = []
 var is_index: Array[bool] = []
+var generated := false
 
 func _ready() -> void:
 	if terrain_path:
@@ -23,6 +24,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_generate_contours()
+	generated = true
 	queue_redraw()
 
 func _generate_contours() -> void:
@@ -75,6 +77,8 @@ func _check_edge(p1: Vector2, h1: float, p2: Vector2, h2: float, level: float, p
 		points.append(p1.lerp(p2, clamp(t, 0.0, 1.0)))
 
 func _draw() -> void:
+	if not generated:
+		return
 	for i in contour_lines.size():
 		var poly: PackedVector2Array = contour_lines[i]
 		if poly.size() < 2:

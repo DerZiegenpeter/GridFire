@@ -2,11 +2,11 @@ extends Camera2D
 
 @export var pan_speed: float = 1100.0
 @export var zoom_speed: float = 0.1
-@export var min_zoom: float = 0.25
-@export var max_zoom: float = 4.0
+@export var min_zoom: float = 0.2
+@export var max_zoom: float = 5.0
 @export var map_size: Vector2 = Vector2(2000, 2000)
 
-@export var free_panning: bool = false   # nicht außerhalb der Karte pannen
+@export var free_panning: bool = true   # wieder frei pannen können
 
 var dragging := false
 var last_mouse_pos := Vector2.ZERO
