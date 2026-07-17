@@ -37,7 +37,7 @@ func _generate_contours() -> void:
 	var max_h: float = terrain.max_height_m
 
 	var levels: Array[float] = []
-	var h := ceil(min_h / contour_interval) * contour_interval
+	var h: float = ceilf(min_h / contour_interval) * contour_interval
 	while h <= max_h:
 		levels.append(h)
 		h += contour_interval
@@ -49,9 +49,9 @@ func _generate_contours() -> void:
 func _extract_isolines(level: float, is_idx: bool) -> void:
 	var step := sample_step
 	var w := map_size.x
-	var h := map_size.y
+	var height := map_size.y
 
-	for y in range(0, h - step, step):
+	for y in range(0, height - step, step):
 		for x in range(0, w - step, step):
 			var h00 := terrain.get_height_meters(Vector2(x, y))
 			var h10 := terrain.get_height_meters(Vector2(x + step, y))
